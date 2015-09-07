@@ -12,17 +12,7 @@ namespace AkkaPlayground.Tests
             throw new InvalidOperationException("The smurfs are invading!");
         }
     }
-
-    internal class UnhandledExceptionMessage
-    {
-        public Exception Exception { get; private set; }
-
-        public UnhandledExceptionMessage(Exception ex)
-        {
-            Exception = ex;
-        }
-    }
-
+    
     public class ExceptionalActor : UntypedActor
     {
         private readonly IActorRef _probe;
@@ -39,7 +29,7 @@ namespace AkkaPlayground.Tests
         {
             return new OneForOneStrategy(-1, TimeSpan.FromSeconds(3), x =>
             {
-                _probe.Tell(new UnhandledExceptionMessage(x));
+                _probe.Tell(x);
 
                 return Directive.Resume;
             });
@@ -60,7 +50,7 @@ namespace AkkaPlayground.Tests
             var exceptionalActor = ActorOfAsTestActorRef<ExceptionalActor>(Props.Create(() => new ExceptionalActor(probe, Props.Create<MyBadActor>())));
             exceptionalActor.Tell("It's a thing!");
 
-            probe.ExpectMsg<UnhandledExceptionMessage>();
+            probe.ExpectMsg<InvalidOperationException>();
         }
     }
 }
